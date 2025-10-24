@@ -226,7 +226,7 @@ export default function CourseProgress() {
                             lesson.questions &&
                             handleLessonClick(lesson)
                           }
-                          className={`flex justify-between items-center p-2 rounded-md border transition ${
+                          className={`flex justify-between items-center p-2 rounded-md border transition flex-wrap gap-2 ${
                             lesson.locked
                               ? "opacity-50 cursor-not-allowed"
                               : isCompleted
@@ -234,9 +234,9 @@ export default function CourseProgress() {
                               : "hover:bg-gray-50 cursor-pointer"
                           }`}
                         >
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 ">
                             <FileText className="w-4 h-4 text-gray-600" />
-                            <span>{lesson.title}</span>
+                            <span className="text-sm">{lesson.title}</span>
                           </div>
 
                           {lesson.locked ? (
@@ -297,7 +297,7 @@ export default function CourseProgress() {
                             lesson.questions &&
                             handleLessonClick(lesson)
                           }
-                          className={`flex justify-between items-center p-2 rounded-md border transition ${
+                          className={`flex justify-between items-center p-2 rounded-md border transition flex-wrap gap-2 ${
                             lesson.locked
                               ? "opacity-50 cursor-not-allowed"
                               : isCompleted
@@ -307,7 +307,7 @@ export default function CourseProgress() {
                         >
                           <div className="flex items-center space-x-2">
                             <FileText className="w-4 h-4 text-gray-600" />
-                            <span>{lesson.title}</span>
+                            <span className="text-sm">{lesson.title}</span>
                           </div>
 
                           {lesson.locked ? (

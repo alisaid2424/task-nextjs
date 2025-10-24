@@ -16,7 +16,7 @@ export default function CustomVideoPlayer() {
           <Image
             src="/poster-img.png"
             alt="video poster"
-            className="w-full h-[380px] object-cover rounded-lg"
+            className="w-full h-[290px] sm:h-[380px] object-cover rounded-lg"
             width={800}
             height={700}
           />
@@ -29,7 +29,7 @@ export default function CustomVideoPlayer() {
         </>
       ) : (
         <iframe
-          className="w-full h-[380px]"
+          className="w-full h-[290px] sm:h-[380px]"
           src="https://www.youtube.com/embed/TZe5UqlUg0c?autoplay=1"
           title="YouTube video player"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
