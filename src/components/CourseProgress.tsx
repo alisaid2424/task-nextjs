@@ -150,7 +150,7 @@ export default function CourseProgress() {
       toast({
         title: "Success! 🎉",
         description: "🎉 Great job! That’s the correct answer!",
-        className: "bg-green-600 text-white",
+        className: "bg-green-100 text-green-700",
       });
 
       if (!isAlreadyCorrect) {
@@ -158,9 +158,9 @@ export default function CourseProgress() {
       }
     } else {
       toast({
-        variant: "destructive",
         title: "Wrong answer",
         description: "😅 Not quite right. Keep trying — you’re learning!",
+        className: "bg-red-100 text-red-700",
       });
     }
 
