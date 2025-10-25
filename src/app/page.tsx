@@ -11,7 +11,7 @@ const HomePage = () => {
     <main className="container max-w-7xl mx-auto my-5">
       <BreadcrumbDemo />
       <Heading
-        title="Starting SEO as your Home"
+        title="Starting SEO as your Home Based Business"
         className="text-xl sm:text-2xl mt-7 mb-5"
       />
       <div className="flex flex-col justify-between lg:flex-row gap-5 w-full">
