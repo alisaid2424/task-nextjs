@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { FileText, Lock, Plus, Minus } from "lucide-react";
 import Heading from "./Heading";
 import { weeks } from "@/lib/constants";
+import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   question: string;
@@ -34,13 +35,13 @@ interface Lesson {
 }
 
 export default function CourseProgress() {
+  const { toast } = useToast();
   const [progress, setProgress] = useState<number>(0);
   const [answeredCount, setAnsweredCount] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [accordionType, setAccordionType] = useState<"single" | "multiple">(
     "single"
@@ -117,7 +118,6 @@ export default function CourseProgress() {
     if (!lesson.questions) return;
     setSelectedLesson(lesson);
     setAnswers(new Array(lesson.questions.length).fill(-1));
-    setFeedback(null);
     setOpenDialog(true);
   };
 
@@ -147,12 +147,21 @@ export default function CourseProgress() {
     const correct = selectedLesson.questions[qIndex].correct;
 
     if (optionIndex === correct) {
-      setFeedback("🎉 Great job! That’s the correct answer!");
+      toast({
+        title: "Success! 🎉",
+        description: "🎉 Great job! That’s the correct answer!",
+        className: "bg-green-600 text-white",
+      });
+
       if (!isAlreadyCorrect) {
         setAnsweredCount((prev) => prev + 1);
       }
     } else {
-      setFeedback("😅 Not quite right. Keep trying — you’re learning!");
+      toast({
+        variant: "destructive",
+        title: "Wrong answer",
+        description: "😅 Not quite right. Keep trying — you’re learning!",
+      });
     }
 
     if (
@@ -167,8 +176,6 @@ export default function CourseProgress() {
         );
       }
     }
-
-    setTimeout(() => setFeedback(null), 2000);
   };
 
   return (
@@ -363,7 +370,7 @@ export default function CourseProgress() {
                   <button
                     key={optIndex}
                     onClick={() => handleAnswer(qIndex, optIndex)}
-                    className={`block w-full text-left border rounded-md p-2 mb-2 text-sm transition ${
+                    className={`block w-full text-left border rounded-md p-2 mb-2 outline-none text-sm transition ${
                       answers[qIndex] === optIndex
                         ? optIndex === q.correct
                           ? "bg-green-100 border-green-500"
@@ -377,10 +384,6 @@ export default function CourseProgress() {
                 ))}
               </div>
             ))}
-
-            {feedback && (
-              <p className="text-center text-lg animate-bounce">{feedback}</p>
-            )}
 
             <button
               onClick={() => setOpenDialog(false)}
