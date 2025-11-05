@@ -7,18 +7,14 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { FileText, Lock, Plus, Minus } from "lucide-react";
 import Heading from "./Heading";
 import { weeks } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface Question {
   question: string;
@@ -47,6 +43,7 @@ export default function CourseProgress() {
     "single"
   );
   const [defaultValue, setDefaultValue] = useState<string | string[]>("week-0");
+  const [timer, setTimer] = useState<number>(0);
 
   // Count total questions on mount
   useEffect(() => {
@@ -109,6 +106,23 @@ export default function CourseProgress() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (!openDialog) return;
+
+    const countdown = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdown);
+          setOpenDialog(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdown);
+  }, [openDialog]);
+
   // Unique key for each lesson
   const getLessonKey = (weekTitle: string, lessonTitle: string) =>
     `${weekTitle}-${lessonTitle}`;
@@ -116,9 +130,23 @@ export default function CourseProgress() {
   // When user opens a lesson
   const handleLessonClick = (lesson: Lesson) => {
     if (!lesson.questions) return;
+
     setSelectedLesson(lesson);
     setAnswers(new Array(lesson.questions.length).fill(-1));
     setOpenDialog(true);
+
+    // Extract the actual time from the text
+    if (lesson.time) {
+      const match = lesson.time.match(/(\d+)\s*MINUTES?/i);
+      if (match) {
+        const minutes = parseInt(match[1], 10);
+        setTimer(minutes * 60);
+      } else {
+        setTimer(0);
+      }
+    } else {
+      setTimer(0);
+    }
   };
 
   // When user answers a question
@@ -178,6 +206,85 @@ export default function CourseProgress() {
     }
   };
 
+  // Render Accordion for a week
+  const renderAccordionContent = (
+    weekIndex: number,
+    week: (typeof weeks)[number]
+  ) => (
+    <AccordionItem
+      key={weekIndex}
+      value={`week-${weekIndex}`}
+      className="group"
+    >
+      <AccordionTrigger className="flex items-center justify-between text-lg font-semibold hover:no-underline !outline-none !border-none focus:outline-none">
+        <div>
+          <h2 className="text-gray-800 mb-2">{week.title}</h2>
+          <p className="text-sm text-muted-foreground font-normal hidden md:block">
+            {week.subtitle}
+          </p>
+        </div>
+        <div className="ml-2 text-gray-800 ">
+          <Plus className="w-5 h-5 group-data-[state=open]:hidden" />
+          <Minus className="w-5 h-5 hidden group-data-[state=open]:block" />
+        </div>
+      </AccordionTrigger>
+
+      <AccordionContent>
+        <div className="mt-3 space-y-2">
+          {week.lessons.map((lesson, i) => {
+            const lessonKey = getLessonKey(week.title, lesson.title);
+            const isCompleted = completedLessons.includes(lessonKey);
+
+            return (
+              <div
+                key={i}
+                onClick={() =>
+                  !lesson.locked &&
+                  !isCompleted &&
+                  lesson.questions &&
+                  handleLessonClick(lesson)
+                }
+                className={`flex justify-between items-center p-2 rounded-md border transition  gap-2 ${
+                  lesson.locked
+                    ? "opacity-50 cursor-not-allowed"
+                    : isCompleted
+                    ? "opacity-70 bg-green-50 cursor-not-allowed"
+                    : "hover:bg-gray-50 cursor-pointer"
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm">{lesson.title}</span>
+                </div>
+
+                {lesson.locked ? (
+                  <Lock className="w-4 h-4 text-gray-400" />
+                ) : isCompleted ? (
+                  <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-md">
+                    ✅ Completed
+                  </span>
+                ) : (
+                  <div className="flex flex-col space-y-1">
+                    {lesson.questions && (
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-md">
+                        {lesson.questions.length} QUESTION
+                      </span>
+                    )}
+                    {lesson.time && (
+                      <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-md">
+                        {lesson.time}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
+
   return (
     <div className="flex flex-col gap-8">
       {/* Progress Section */}
@@ -193,207 +300,137 @@ export default function CourseProgress() {
       </div>
 
       {/* Lessons Accordion */}
-      {weeks.map((week, index) => (
-        <div
-          key={index}
-          className="border rounded shadow-sm p-4 bg-white hover:shadow-md transition-all"
-        >
-          {accordionType === "single" ? (
-            <Accordion
-              type="single"
-              collapsible
-              defaultValue={defaultValue as string}
-            >
-              <AccordionItem value={`week-${index}`} className="group">
-                <AccordionTrigger className="flex items-center justify-between text-lg font-semibold hover:no-underline !outline-none !border-none focus:outline-none">
-                  <div>
-                    <h2 className="text-gray-800 mb-2">{week.title}</h2>
-                    <p className="text-sm text-muted-foreground font-normal hidden md:block">
-                      {week.subtitle}
-                    </p>
-                  </div>
-                  <div className="ml-2 text-gray-800 ">
-                    <Plus className="w-5 h-5 group-data-[state=open]:hidden" />
-                    <Minus className="w-5 h-5 hidden group-data-[state=open]:block" />
-                  </div>
-                </AccordionTrigger>
-
-                <AccordionContent>
-                  <div className="mt-3 space-y-2">
-                    {week.lessons.map((lesson, i) => {
-                      const lessonKey = getLessonKey(week.title, lesson.title);
-                      const isCompleted = completedLessons.includes(lessonKey);
-
-                      return (
-                        <div
-                          key={i}
-                          onClick={() =>
-                            !lesson.locked &&
-                            !isCompleted &&
-                            lesson.questions &&
-                            handleLessonClick(lesson)
-                          }
-                          className={`flex justify-between items-center p-2 rounded-md border transition flex-wrap gap-2 ${
-                            lesson.locked
-                              ? "opacity-50 cursor-not-allowed"
-                              : isCompleted
-                              ? "opacity-70 bg-green-50 cursor-not-allowed"
-                              : "hover:bg-gray-50 cursor-pointer"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2 ">
-                            <FileText className="w-4 h-4 text-gray-600" />
-                            <span className="text-sm">{lesson.title}</span>
-                          </div>
-
-                          {lesson.locked ? (
-                            <Lock className="w-4 h-4 text-gray-400" />
-                          ) : isCompleted ? (
-                            <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-md">
-                              ✅ Completed
-                            </span>
-                          ) : (
-                            <div className="flex items-center space-x-2">
-                              {lesson.questions && (
-                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-md">
-                                  {lesson.questions.length} QUESTION
-                                </span>
-                              )}
-                              {lesson.time && (
-                                <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-md">
-                                  {lesson.time}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          ) : (
-            <Accordion type="multiple" defaultValue={defaultValue as string[]}>
-              <AccordionItem value={`week-${index}`} className="group">
-                <AccordionTrigger className="flex items-center justify-between text-lg font-semibold hover:no-underline !outline-none !border-none focus:outline-none">
-                  <div>
-                    <h2 className="text-gray-800 mb-2">{week.title}</h2>
-                    <p className="text-sm text-muted-foreground font-normal hidden md:block">
-                      {week.subtitle}
-                    </p>
-                  </div>
-                  <div className="ml-2 text-gray-800 ">
-                    <Plus className="w-5 h-5 group-data-[state=open]:hidden" />
-                    <Minus className="w-5 h-5 hidden group-data-[state=open]:block" />
-                  </div>
-                </AccordionTrigger>
-
-                <AccordionContent>
-                  <div className="mt-3 space-y-2">
-                    {week.lessons.map((lesson, i) => {
-                      const lessonKey = getLessonKey(week.title, lesson.title);
-                      const isCompleted = completedLessons.includes(lessonKey);
-
-                      return (
-                        <div
-                          key={i}
-                          onClick={() =>
-                            !lesson.locked &&
-                            !isCompleted &&
-                            lesson.questions &&
-                            handleLessonClick(lesson)
-                          }
-                          className={`flex justify-between items-center p-2 rounded-md border transition flex-wrap gap-2 ${
-                            lesson.locked
-                              ? "opacity-50 cursor-not-allowed"
-                              : isCompleted
-                              ? "opacity-70 bg-green-50 cursor-not-allowed"
-                              : "hover:bg-gray-50 cursor-pointer"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2">
-                            <FileText className="w-4 h-4 text-gray-600" />
-                            <span className="text-sm">{lesson.title}</span>
-                          </div>
-
-                          {lesson.locked ? (
-                            <Lock className="w-4 h-4 text-gray-400" />
-                          ) : isCompleted ? (
-                            <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-md">
-                              ✅ Completed
-                            </span>
-                          ) : (
-                            <div className="flex items-center space-x-2">
-                              {lesson.questions && (
-                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-md">
-                                  {lesson.questions.length} QUESTION
-                                </span>
-                              )}
-                              {lesson.time && (
-                                <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-md">
-                                  {lesson.time}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
-        </div>
-      ))}
+      <div className="border rounded shadow-sm p-4 bg-white hover:shadow-md transition-all">
+        {accordionType === "single" ? (
+          <Accordion
+            type="single"
+            collapsible
+            defaultValue={defaultValue as string}
+            className="space-y-2"
+          >
+            {weeks.map((week, idx) => renderAccordionContent(idx, week))}
+          </Accordion>
+        ) : (
+          <Accordion
+            type="multiple"
+            defaultValue={defaultValue as string[]}
+            className="space-y-2"
+          >
+            {weeks.map((week, idx) => renderAccordionContent(idx, week))}
+          </Accordion>
+        )}
+      </div>
 
       {/* Popup Dialog for Questions */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-md w-[90%] overflow-y-scroll max-h-[550px]">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">
-              {selectedLesson?.title}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              {selectedLesson?.description}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="fixed z-[9999] sm:max-w-md w-[90%] max-h-[550px] rounded-2xl shadow-2xl p-0 bg-blue-700 overflow-scroll flex flex-col space-y-3">
+          <VisuallyHidden>
+            <DialogTitle>Lesson Questions</DialogTitle>
+          </VisuallyHidden>
 
-          <div className="mt-4 space-y-4">
-            {selectedLesson?.questions?.map((q, qIndex) => (
-              <div key={qIndex} className="p-3 border rounded-md">
-                <p className="font-medium text-gray-700 mb-2">
-                  {qIndex + 1}. {q.question}
-                </p>
-                {q.options.map((opt, optIndex) => (
-                  <button
-                    key={optIndex}
-                    onClick={() => handleAnswer(qIndex, optIndex)}
-                    className={`block w-full text-left border rounded-md p-2 mb-2 outline-none text-sm transition ${
-                      answers[qIndex] === optIndex
-                        ? optIndex === q.correct
-                          ? "bg-green-100 border-green-500"
-                          : "bg-red-100 border-red-500"
-                        : "hover:bg-gray-100"
-                    }`}
-                    disabled={answers[qIndex] !== -1}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            ))}
-
-            <button
-              onClick={() => setOpenDialog(false)}
-              className="mt-4 w-full bg-green-500 text-white rounded-md py-2 hover:bg-green-600 transition-colors"
-            >
-              Close Lesson
-            </button>
+          {/* Timer */}
+          <div className="mx-auto w-fit bg-yellow-400 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-md">
+            ⏰{" "}
+            {timer > 0
+              ? new Date(timer * 1000).toISOString().substr(14, 5)
+              : "--:--"}
           </div>
+
+          {/* Question Section */}
+          {selectedLesson && selectedLesson.questions && (
+            <QuestionStepper
+              questions={selectedLesson.questions}
+              answers={answers}
+              onAnswer={handleAnswer}
+              onClose={() => setOpenDialog(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+interface QuestionStepperProps {
+  questions: Question[];
+  answers: number[];
+  onAnswer: (qIndex: number, optIndex: number) => void;
+  onClose: () => void;
+}
+
+function QuestionStepper({
+  questions,
+  answers,
+  onAnswer,
+  onClose,
+}: QuestionStepperProps) {
+  const [current, setCurrent] = useState(0);
+  const q = questions[current];
+
+  const handleNext = () => {
+    if (current < questions.length - 1) {
+      setCurrent((prev) => prev + 1);
+    } else {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col justify-between">
+      {/* Top numbered buttons */}
+      <div className="flex justify-center gap-3 mt-5">
+        {questions.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`w-9 h-9 flex items-center justify-center rounded-full focus:outline-none text-sm font-semibold border-2 border-white transition-all ${
+              i === current
+                ? "bg-blue-600 text-white scale-110"
+                : answers[i] !== -1
+                ? "bg-green-500 text-white"
+                : "bg-white text-gray-700  hover:bg-gray-300"
+            }`}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </div>
+
+      {/* Question content */}
+      <div className="px-5 pb-6 mt-6 ">
+        <div className=" shadow-md rounded-xl p-4 border border-gray-100 flex flex-col gap-4 bg-gray-50">
+          <p className="font-semibold text-gray-800 mb-3 text-base">
+            {current + 1}. {q.question}
+          </p>
+
+          {q.options.map((opt, optIndex) => (
+            <button
+              key={optIndex}
+              onClick={() => onAnswer(current, optIndex)}
+              className={`block w-full text-left border text-black rounded-lg p-5 mb-2 text-sm font-medium transition-all ${
+                answers[current] === optIndex
+                  ? optIndex === q.correct
+                    ? "bg-green-100 border-green-500 text-green-700 shadow-inner"
+                    : "bg-red-100 border-red-500 text-red-700 shadow-inner"
+                  : "hover:text-white hover:bg-blue-700 border-gray-200"
+              }`}
+              disabled={answers[current] !== -1}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom "Next" button */}
+      <div className="px-5 pb-5">
+        <button
+          onClick={handleNext}
+          className="w-full bg-blue-950 text-white rounded-md py-2 font-medium  shadow-md"
+        >
+          {current === questions.length - 1 ? "Finish" : "Next"}
+        </button>
+      </div>
     </div>
   );
 }

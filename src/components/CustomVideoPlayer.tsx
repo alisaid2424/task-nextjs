@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useState } from "react";
+import MyIcons from "./MyIcons";
 
 export default function CustomVideoPlayer() {
   const [playing, setPlaying] = useState(false);
@@ -10,9 +11,9 @@ export default function CustomVideoPlayer() {
   const handlePlay = () => setPlaying(true);
 
   return (
-    <div className="sticky top-0 z-50 w-full">
+    <div className="sticky top-0 z-50 w-full bg-white px-3">
       {!playing ? (
-        <>
+        <div className="relative">
           <Image
             src="/poster-img.png"
             alt="video poster"
@@ -26,7 +27,7 @@ export default function CustomVideoPlayer() {
           >
             <div className="w-0 h-0 border-l-[20px] border-l-red-600 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent" />
           </Button>
-        </>
+        </div>
       ) : (
         <iframe
           className="w-full h-[290px] sm:h-[380px] rounded-lg"
@@ -36,6 +37,8 @@ export default function CustomVideoPlayer() {
           allowFullScreen
         ></iframe>
       )}
+
+      <MyIcons />
     </div>
   );
 }

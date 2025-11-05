@@ -4,7 +4,6 @@ import CourseMaterials from "@/components/course-materials";
 import CourseProgress from "@/components/CourseProgress";
 import CustomVideoPlayer from "@/components/CustomVideoPlayer";
 import Heading from "@/components/Heading";
-import MyIcons from "@/components/MyIcons";
 
 const HomePage = () => {
   return (
@@ -17,7 +16,7 @@ const HomePage = () => {
       <div className="flex flex-col justify-between lg:flex-row gap-5 w-full">
         <div className="basis-2/3">
           <CustomVideoPlayer />
-          <MyIcons />
+
           <CourseMaterials />
           <div className="hidden lg:block">
             <Comments />
