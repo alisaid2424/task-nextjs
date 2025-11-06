@@ -11,7 +11,7 @@ export default function CustomVideoPlayer() {
   const handlePlay = () => setPlaying(true);
 
   return (
-    <div className="sticky top-0 z-50 w-full bg-white px-3">
+    <div className="sticky top-0 z-50 w-full bg-background">
       {!playing ? (
         <div className="relative">
           <Image

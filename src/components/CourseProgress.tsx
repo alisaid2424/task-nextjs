@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/accordion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { FileText, Lock, Plus, Minus } from "lucide-react";
+import { FileText, Lock, Plus, Minus, AlarmClock } from "lucide-react";
 import Heading from "./Heading";
 import { weeks } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Checkbox } from "./ui/checkbox";
 
 interface Question {
   question: string;
@@ -323,14 +324,14 @@ export default function CourseProgress() {
 
       {/* Popup Dialog for Questions */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="fixed z-[9999] sm:max-w-md w-[90%] max-h-[550px] rounded-2xl shadow-2xl p-0 bg-blue-700 overflow-scroll flex flex-col space-y-3">
+        <DialogContent className="fixed z-50 sm:max-w-md w-[90%] max-h-[550px] rounded-2xl shadow-2xl p-0 bg-blue-700 overflow-auto flex flex-col space-y-3 py-3">
           <VisuallyHidden>
             <DialogTitle>Lesson Questions</DialogTitle>
           </VisuallyHidden>
 
           {/* Timer */}
-          <div className="mx-auto w-fit bg-yellow-400 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-md">
-            ⏰{" "}
+          <div className="flex items-center gap-3 mx-auto w-fit bg-yellow-400 text-white px-5 py-2 rounded-md text-base font-semibold shadow-md">
+            <AlarmClock className="h-5 w-5" />
             {timer > 0
               ? new Date(timer * 1000).toISOString().substr(14, 5)
               : "--:--"}
@@ -378,17 +379,15 @@ function QuestionStepper({
   return (
     <div className="flex-1 flex flex-col justify-between">
       {/* Top numbered buttons */}
-      <div className="flex justify-center gap-3 mt-5">
+      <div className="flex justify-center gap-3 mt-2 mb-3">
         {questions.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`w-9 h-9 flex items-center justify-center rounded-full focus:outline-none text-sm font-semibold border-2 border-white transition-all ${
+            className={`w-10 h-10 flex items-center justify-center rounded-full focus:outline-none text-sm font-semibold border-2 border-white transition-all ${
               i === current
-                ? "bg-blue-600 text-white scale-110"
-                : answers[i] !== -1
-                ? "bg-green-500 text-white"
-                : "bg-white text-gray-700  hover:bg-gray-300"
+                ? "bg-white text-blue-700 scale-110"
+                : "bg-transparent text-white  hover:bg-blue-700 hover:text-white"
             }`}
           >
             {i + 1}
@@ -403,22 +402,43 @@ function QuestionStepper({
             {current + 1}. {q.question}
           </p>
 
-          {q.options.map((opt, optIndex) => (
-            <button
-              key={optIndex}
-              onClick={() => onAnswer(current, optIndex)}
-              className={`block w-full text-left border text-black rounded-lg p-5 mb-2 text-sm font-medium transition-all ${
-                answers[current] === optIndex
-                  ? optIndex === q.correct
-                    ? "bg-green-100 border-green-500 text-green-700 shadow-inner"
-                    : "bg-red-100 border-red-500 text-red-700 shadow-inner"
-                  : "hover:text-white hover:bg-blue-700 border-gray-200"
-              }`}
-              disabled={answers[current] !== -1}
-            >
-              {opt}
-            </button>
-          ))}
+          {q.options.map((opt, optIndex) => {
+            const isSelected = answers[current] === optIndex;
+            const isAnswered = answers[current] !== -1;
+            const isCorrect = optIndex === q.correct;
+
+            return (
+              <label
+                key={optIndex}
+                className={`relative flex items-center gap-4 border shadow-lg rounded-lg p-4 mb-2 cursor-pointer transition-all ${
+                  isSelected
+                    ? isCorrect
+                      ? "bg-blue-700  text-white shadow-inner"
+                      : "bg-red-100 border-red-500 text-red-700 shadow-inner"
+                    : "hover:bg-blue-700 hover:text-white border-gray-200"
+                } ${isAnswered ? "cursor-not-allowed" : ""}`}
+              >
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={() =>
+                    !isAnswered && onAnswer(current, optIndex)
+                  }
+                  disabled={isAnswered}
+                  className={`border-2  ${
+                    isSelected
+                      ? isCorrect
+                        ? "!border-white "
+                        : "border-red-600 "
+                      : "border-gray-400"
+                  }`}
+                />
+
+                <div className="before:content-[''] before:absolute before:left-12 before:top-0  before:w-[2px] before:!h-full before:bg-gray-200" />
+
+                <span className="text-sm font-medium">{opt}</span>
+              </label>
+            );
+          })}
         </div>
       </div>
 
