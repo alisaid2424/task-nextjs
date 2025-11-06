@@ -427,7 +427,7 @@ function QuestionStepper({
                   className={`border-2  ${
                     isSelected
                       ? isCorrect
-                        ? "!border-white "
+                        ? "border-white"
                         : "border-red-600 "
                       : "border-gray-400"
                   }`}
@@ -435,7 +435,7 @@ function QuestionStepper({
 
                 <div className="before:content-[''] before:absolute before:left-12 before:top-0  before:w-[2px] before:!h-full before:bg-gray-200" />
 
-                <span className="text-sm font-medium">{opt}</span>
+                <span className="text-xs sm:text-sm font-medium">{opt}</span>
               </label>
             );
           })}

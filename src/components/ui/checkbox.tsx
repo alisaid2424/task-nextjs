@@ -18,10 +18,13 @@ const Checkbox = React.forwardRef<
     )}
     {...props}
   >
-    <CheckboxPrimitive.Indicator
-      className={cn("grid place-content-center text-current")}
-    >
-      <Circle className="h-2 w-2 border-2 rounded-full !bg-white" />
+    <CheckboxPrimitive.Indicator className={cn("grid place-content-center ")}>
+      <Circle
+        className="h-2 w-2 rounded-full"
+        color="white"
+        fill="white"
+        stroke="white"
+      />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ));
