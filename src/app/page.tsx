@@ -1,9 +1,9 @@
 import BreadcrumbDemo from "@/components/BreadcrumbDemo";
 import Comments from "@/components/Comments";
 import CourseMaterials from "@/components/course-materials";
-import CourseProgress from "@/components/CourseProgress";
 import CustomVideoPlayer from "@/components/CustomVideoPlayer";
 import Heading from "@/components/Heading";
+import CourseProgress from "@/components/CourseProgress/CourseProgress";
 
 const HomePage = () => {
   return (
@@ -24,7 +24,8 @@ const HomePage = () => {
         </div>
 
         <div className="basis-1/3">
-          <CourseProgress />
+          {" "}
+          <CourseProgress />{" "}
         </div>
       </div>
       <div className="lg:hidden">
