@@ -3,31 +3,45 @@
 import * as React from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { Circle } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 
-const Checkbox = React.forwardRef<
+export const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
->(({ className, ...props }, ref) => (
-  <CheckboxPrimitive.Root
-    ref={ref}
-    className={cn(
-      "grid place-content-center peer h-4 w-4 shrink-0 rounded-sm border  shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white",
-      className
-    )}
-    {...props}
-  >
-    <CheckboxPrimitive.Indicator className={cn("grid place-content-center ")}>
-      <Circle
-        className="h-2 w-2 rounded-full"
-        color="white"
-        fill="white"
-        stroke="white"
-      />
-    </CheckboxPrimitive.Indicator>
-  </CheckboxPrimitive.Root>
-));
-Checkbox.displayName = CheckboxPrimitive.Root.displayName;
+>(({ className, checked, onCheckedChange, ...props }, ref) => {
+  const [localChecked, setLocalChecked] = React.useState(!!checked);
 
-export { Checkbox };
+  React.useEffect(() => {
+    setLocalChecked(!!checked);
+  }, [checked]);
+
+  const handleChange = (value: boolean) => {
+    setLocalChecked(value);
+    onCheckedChange?.(value);
+  };
+
+  return (
+    <CheckboxPrimitive.Root
+      ref={ref}
+      checked={localChecked}
+      onCheckedChange={handleChange}
+      className={cn(
+        "grid place-content-center h-4 w-4 shrink-0 rounded-sm border-2 transition-all duration-150",
+        className
+      )}
+      {...props}
+    >
+      {localChecked && (
+        <CheckboxPrimitive.Indicator className="grid place-content-center">
+          <Circle
+            className="h-2 w-2 rounded-full"
+            fill="white"
+            stroke="white"
+          />
+        </CheckboxPrimitive.Indicator>
+      )}
+    </CheckboxPrimitive.Root>
+  );
+});
+
+Checkbox.displayName = "Checkbox";
